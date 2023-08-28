@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import ttk
-import time
+from tkinter import messagebox
 
 TITLE_FONT = ("Verdana", 24)
 FONT = ("Verdana", 12)
@@ -34,13 +34,13 @@ class BatchInterface:
         self.num1_label = Label(text="\nNumber 1", font=FONT, bg=COLOR1, fg="white")
         self.num1_label.grid(row=3, column=0)
         
-        self.num2_label = Label(self.window, text="\nOperator", bg=COLOR1, fg="white", 
+        self.num2_label = Label(text="\nOperator", bg=COLOR1, fg="white", 
                                 font=FONT)
         self.num2_label.grid(row=3, column=1)
         
-        self.num3_label = Label(self.window, text="\nNumber 2", bg=COLOR1, fg="white", 
+        self.num2_label = Label(text="\nNumber 2", bg=COLOR1, fg="white", 
                                 font=FONT)
-        self.num3_label.grid(row=3, column=2)
+        self.num2_label.grid(row=3, column=2)
         
         # entry num 1
         self.num1_entry = Entry(width=10, font=FONT)
@@ -50,15 +50,16 @@ class BatchInterface:
         self.combo_var = StringVar()
         self.combobox = ttk.Combobox(textvariable=self.combo_var, width=7, font=FONT)
         self.combobox['values'] = ('+', '-', '*', '/', '%')
+        self.combobox.insert(0, '+')
         self.combobox.bind("<<ComboboxSelected>>") # insert command
         self.combobox.grid(row=4, column=1)
         
         # entry number 2 
-        self.num3_entry = Entry(width=10, font=FONT)
-        self.num3_entry.grid(row=4, column=2)
+        self.num2_entry = Entry(width=10, font=FONT)
+        self.num2_entry.grid(row=4, column=2)
         
         # Label Max time 
-        self.max_time_label = Label(text="\nMax Time", font=FONT, bg=COLOR1, fg="white")
+        self.max_time_label = Label(text="\nMax Time (secs.)", font=FONT, bg=COLOR1, fg="white")
         self.max_time_label.grid(row=5, column=1)
         # entry Max time
         self.max_time_entry = Entry(width=40, font=FONT)
@@ -72,7 +73,44 @@ class BatchInterface:
         self.id_entry.grid(row=8, column=0, columnspan=3)
         
         # Button Save
-        self.save_button = Button(text="Save", font=("Verdana 15 bold"), height=2, width=8)
+        self.save_button = Button(text="Save", font=("Verdana 15 bold"), height=2, width=8,
+                                  bg="#FFC436", command=self.save)
         self.save_button.grid(row=9, column=1, pady=15)
-        
+         
         self.window.mainloop()
+        
+    
+    def save(self):
+        """validate entries"""
+        
+        operator = self.combobox.get()
+        
+        try:
+            num1 = int(self.num1_entry.get())
+            num2 = int(self.num2_entry.get())
+            max_time = int(self.max_time_entry.get())
+            
+        except ValueError:
+            messagebox.showerror(title="Error", message="You must use numbers")
+        
+        else:
+            
+            if max_time < 1:
+                messagebox.showerror(title="Error", message="(max time) must be greater than zero")
+                
+            elif (operator == '/' or operator == '%') and num2 == 0:
+                messagebox.showerror(title="Error", message="You're trying division by zero")
+                
+            elif self.name_entry.get() == "" or self.id_entry.get() == "":
+                messagebox.showerror(title="Error", message="Do not leave empty spaces")
+                
+            elif self.combobox.get() not in ('+', '-', '*', '/', '%'):
+                messagebox.showerror(title="Error", message="You must use an operator")
+            
+            else:
+                print("you complete validation")
+                
+                
+                
+
+        

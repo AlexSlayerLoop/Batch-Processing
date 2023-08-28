@@ -9,5 +9,3 @@ class Process:
         self.operator = operator
         self.max_time = max_time
         self.id = id
-        
-   
