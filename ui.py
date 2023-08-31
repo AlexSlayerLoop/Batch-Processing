@@ -1,4 +1,4 @@
-from tkinter import *
+import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from process import Process
@@ -10,86 +10,85 @@ COLOR2 = "#040D12"
 COLOR3 = "#5C8374"
 COLOR4 = "#93B1A6"
 
-class SaveDataInterface:
+class SaveDataInterface(tk.Tk):
     
     def __init__(self):
-    
-        self.window = Tk()
-        self.window.title("Batch Processing")
-        #self.window.geometry("500x500")
-        self.window.config(bg=COLOR1, padx=20, pady=20)
-        self.window.resizable(width=False, height=False)
+        super().__init__()
+        
+        self.style = ttk.Style()
+        self.style.configure('TFrame', background=COLOR1)
+        self.main_frame = ttk.Frame(self, padding=10, style='TFrame')
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+        # self.window.title("Batch Processing")
+        # self.window.geometry("500x500")
+        # self.window.config(bg=COLOR1, padx=20, pady=20)
+        # self.window.resizable(width=False, height=False)
 
         # Label title
-        self.title = Label(self.window, text="New Process", font=TITLE_FONT, fg="white",  bg=COLOR2, 
-                           highlightbackground="white", highlightthickness=3, width=20)
-        self.title.grid(row=0, column=0, columnspan=3)
+        self.lbl_title = ttk.Label(self.main_frame, text="New Process", font=TITLE_FONT, foreground="white",  background=COLOR2, width=20)
+        self.lbl_title.grid(row=0, column=0, columnspan=3)
         
         # Label name
-        self.name_label = Label(self.window, text="\nProgrammer's Name", font=FONT, fg="white", bg=COLOR1)
+        self.name_label = ttk.Label(self.main_frame, text="\nProgrammer's Name", font=FONT, foreground="white", background=COLOR1)
         self.name_label.grid(row=1, column=1)
         # Entry name
-        self.name_entry = Entry(self.window, width=40, font=FONT)
+        self.name_entry = ttk.Entry(self.main_frame, width=35, font=FONT)
         self.name_entry.grid(row=2, column=0, columnspan=3)
         
         # Label Number 1
-        self.num1_label = Label(self.window, text="\nNumber 1", font=FONT, bg=COLOR1, fg="white")
-        self.num1_label.grid(row=3, column=0)
+        self.lbl_num1 = ttk.Label(self.main_frame, text="\nNumber 1", font=FONT, background=COLOR1, foreground="white")
         # Label operator 
-        self.num2_label = Label(self.window, text="\nOperator", bg=COLOR1, fg="white", 
-                                font=FONT)
-        self.num2_label.grid(row=3, column=1)
+        self.lbl_operator = ttk.Label(self.main_frame, text="\nOperator", background=COLOR1, foreground="white", font=FONT)
         # Label number 2
-        self.num2_label = Label(self.window, text="\nNumber 2", bg=COLOR1, fg="white", 
-                                font=FONT)
-        self.num2_label.grid(row=3, column=2)
+        self.lbl_num2 = ttk.Label(self.main_frame, text="\nNumber 2", background=COLOR1, foreground="white", font=FONT)
+        # grid Labels
+        self.lbl_num1.grid(row=3, column=0)
+        self.lbl_operator.grid(row=3, column=1)
+        self.lbl_num2.grid(row=3, column=2)
         
         # entry num 1
-        self.num1_entry = Entry(self.window, width=10, font=FONT)
+        self.num1_entry = ttk.Entry(self.main_frame, width=10, font=FONT)
         self.num1_entry.grid(row=4, column=0)
         # combo box operator
-        self.combo_var = StringVar()
-        self.combobox = ttk.Combobox(textvariable=self.combo_var, width=7, font=FONT)
+        self.combo_var = tk.StringVar()
+        self.combobox = ttk.Combobox(self.main_frame, textvariable=self.combo_var,width=7, font=FONT)
         self.combobox['values'] = ('+', '-', '*', '/', '%')
         self.combobox.insert(0, '+')
-        self.combobox.bind("<<ComboboxSelected>>") # insert command
+        #self.combobox.bind("<<ComboboxSelected>>") # insert command
         self.combobox.grid(row=4, column=1)
         # entry number 2 
-        self.num2_entry = Entry(self.window, width=10, font=FONT)
+        self.num2_entry = ttk.Entry(self.main_frame, width=10, font=FONT)
         self.num2_entry.grid(row=4, column=2)
         
         # Label Max time 
-        self.max_time_label = Label(self.window, text="\nMax Time (secs.)", font=FONT, bg=COLOR1, fg="white")
+        self.max_time_label = ttk.Label(self.main_frame, text="\nMax Time (secs.)", font=FONT, background=COLOR1, foreground="white")
         self.max_time_label.grid(row=5, column=1)
         # entry Max time
-        self.max_time_entry = Entry(self.window, width=40, font=FONT)
+        self.max_time_entry = ttk.Entry(self.main_frame, width=35, font=FONT)
         self.max_time_entry.grid(row=6, column=0, columnspan=3)
         
         # Label ID
-        self.id_label = Label(self.window, text="\nUnique ID", font=FONT, bg=COLOR1, fg="white")
+        self.id_label = ttk.Label(self.main_frame, text="\nUnique ID", font=FONT, background=COLOR1, foreground="white")
         self.id_label.grid(row=7, column=1)
         # entry ID
-        self.id_entry = Entry(self.window, width=40, font=FONT) 
+        self.id_entry = ttk.Entry(self.main_frame, width=35, font=FONT) 
         self.id_entry.grid(row=8, column=0, columnspan=3)
         
         # btn Save
-        self.save_btn = Button(self.window, text="Save", font=("Verdana 15 bold"), height=2, width=8,
-                                  bg=COLOR3, command=self.save)
+        self.save_btn = ttk.Button(self.main_frame, text="Save", command=self.save)
         self.save_btn.grid(row=9, column=1, pady=15)
     
         #======================================== Second window ==========================================
-        self.second_window = Toplevel(self.window)
+        """ self.second_window = tk.Toplevel(self.window)
         self.second_window.title("Process Viewer")
         self.second_window.geometry("600x500")
-        # self.second_window.withdraw()
+        # self.second_window.withdraw() """
         
         #=================================== Data ========================================================
         
         
         
     
-    def run(self):
-        self.window.mainloop()
     
     
     def hide_main_window(self):
@@ -101,7 +100,7 @@ class SaveDataInterface:
         """validate and saves entries"""
         
         name = self.name_entry.get()
-        operator = self.combobox.get()
+        operator = self.combo_var.get()
         id = self.id_entry.get()
         
         try:
@@ -137,8 +136,8 @@ class SaveDataInterface:
                 d = new_process.get_dict()
                 
                 self.clear_entries()
-                self.second_window.deiconify()
-                self.hide_main_window()
+                # self.second_window.deiconify()
+                # self.second_window.withdraw()
     
     def create_process(self):
         pass
@@ -153,4 +152,15 @@ class SaveDataInterface:
         self.max_time_entry.delete(0, 'end')
         self.id_entry.delete(0, 'end')
                 
+
+class secondaryWindow(tk.Toplevel):
+    
+    def __init__(self):
+        super().__init__()
         
+        
+        
+        
+if __name__ == "__main__":
+    window = SaveDataInterface()
+    window.mainloop()
