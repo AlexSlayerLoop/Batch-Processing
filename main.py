@@ -1,3 +1,8 @@
-from ui import BatchInterface
+from tkinter import *
+from ui import SaveDataInterface
 
-init_ui = BatchInterface()
+
+if __name__ == "__main__":
+    window = SaveDataInterface()
+    window.run()
+
