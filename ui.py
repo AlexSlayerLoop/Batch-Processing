@@ -22,14 +22,14 @@ class SaveDataInterface(tk.Tk):
         # self.window.title("Batch Processing")
         # self.window.geometry("500x500")
         # self.window.config(bg=COLOR1, padx=20, pady=20)
-        # self.window.resizable(width=False, height=False)
+        self.resizable(width=False, height=False)
 
         # Label title
         self.lbl_title = ttk.Label(self.main_frame, text="New Process", font=TITLE_FONT, foreground="white",  background=COLOR2, width=20)
         self.lbl_title.grid(row=0, column=0, columnspan=3)
         
         # Label name
-        self.name_label = ttk.Label(self.main_frame, text="\nProgrammer's Name", font=FONT, foreground="white", background=COLOR1)
+        self.name_label = ttk.Label(self.main_frame, text="Name", font=FONT, foreground="white", background=COLOR1)
         self.name_label.grid(row=1, column=1)
         # Entry name
         self.name_entry = ttk.Entry(self.main_frame, width=35, font=FONT)
@@ -47,7 +47,7 @@ class SaveDataInterface(tk.Tk):
         self.lbl_num2.grid(row=3, column=2)
         
         # entry num 1
-        self.num1_entry = ttk.Entry(self.main_frame, width=10, font=FONT)
+        self.num1_entry = ttk.Entry(self.main_frame, width=9, font=FONT)
         self.num1_entry.grid(row=4, column=0)
         # combo box operator
         self.combo_var = tk.StringVar()
@@ -57,11 +57,11 @@ class SaveDataInterface(tk.Tk):
         #self.combobox.bind("<<ComboboxSelected>>") # insert command
         self.combobox.grid(row=4, column=1)
         # entry number 2 
-        self.num2_entry = ttk.Entry(self.main_frame, width=10, font=FONT)
+        self.num2_entry = ttk.Entry(self.main_frame, width=9, font=FONT)
         self.num2_entry.grid(row=4, column=2)
         
         # Label Max time 
-        self.max_time_label = ttk.Label(self.main_frame, text="\nMax Time (secs.)", font=FONT, background=COLOR1, foreground="white")
+        self.max_time_label = ttk.Label(self.main_frame, text="\nMax Time\n(secs.)", font=FONT, background=COLOR1, foreground="white")
         self.max_time_label.grid(row=5, column=1)
         # entry Max time
         self.max_time_entry = ttk.Entry(self.main_frame, width=35, font=FONT)
@@ -75,30 +75,40 @@ class SaveDataInterface(tk.Tk):
         self.id_entry.grid(row=8, column=0, columnspan=3)
         
         # btn Save
-        self.save_btn = ttk.Button(self.main_frame, text="Save", command=self.save)
+        self.save_btn = ttk.Button(self.main_frame, text="Save", command=self.on_save_button_clicked)
         self.save_btn.grid(row=9, column=1, pady=15)
     
-        #======================================== Second window ==========================================
-        """ self.second_window = tk.Toplevel(self.window)
-        self.second_window.title("Process Viewer")
-        self.second_window.geometry("600x500")
-        # self.second_window.withdraw() """
+        # self.second_window.withdraw() # ocular ventana 
+        # self.second_window.deiconify() # mostrar ventana
         
-        #=================================== Data ========================================================
-        
-        
-        
-    
-    
     
     def hide_main_window(self):
-        self.window.withdraw() # Hide the main window
+        self.withdraw() # Hide the main window
+        
 
+    def create_process(self):
+        pass
+        # new_process = Process( name=name,
+                #                        operator=operator,
+                #                        max_time=max_time,
+                #                        num1=num1,
+                #                        num2=num2,
+                #                        id=id
+                #                      )
+                # d = new_process.get_dict()
+                # print(d)
+                
+    def on_save_button_clicked(self):
         
-    
-    def save(self):
-        """validate and saves entries"""
-        
+        result = self.validate_data()
+        if result:
+            #TODO create Process
+            print("Create Process...")
+            self.clear_entries()
+
+
+    def validate_data(self): 
+        """Validate all fields to move forward"""
         name = self.name_entry.get()
         operator = self.combo_var.get()
         id = self.id_entry.get()
@@ -115,29 +125,21 @@ class SaveDataInterface(tk.Tk):
             
             if max_time < 1:
                 messagebox.showerror(title="Error", message="(max time) must be greater than zero")
-                
+                return False
             elif (operator == '/' or operator == '%') and num2 == 0:
                 messagebox.showerror(title="Error", message="You're trying division by zero")
-                
+                return False
             elif name == "" or id == "":
                 messagebox.showerror(title="Error", message="Do not leave empty spaces")
-                
+                return False
             elif operator not in ('+', '-', '*', '/', '%'):
                 messagebox.showerror(title="Error", message="You must use an operator")
+                return False
+            #TODO add validation to verify unique ID
             
             else:
-                new_process = Process( name=name,
-                                       operator=operator,
-                                       max_time=max_time,
-                                       num1=num1,
-                                       num2=num2,
-                                       id=id
-                                     )
-                d = new_process.get_dict()
+                return True
                 
-                self.clear_entries()
-                # self.second_window.deiconify()
-                # self.second_window.withdraw()
     
     def create_process(self):
         pass
@@ -153,12 +155,16 @@ class SaveDataInterface(tk.Tk):
         self.id_entry.delete(0, 'end')
                 
 
-class secondaryWindow(tk.Toplevel):
+class SecondaryWindow(tk.Toplevel):
     
     def __init__(self):
         super().__init__()
         
+        self.main_frame = ttk.Frame(self)
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
         
+        self.entry_title = ttk.Label(self.main_frame, text="Process")
+        self.entry_title.grid(row=0, column=0)
         
         
 if __name__ == "__main__":

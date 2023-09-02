@@ -3,7 +3,7 @@
 
 class Process:
     
-    def __init__(self, **process_data) -> None: 
+    def __init__(self, **process_data): 
         
         self.programmer_nm = process_data["name"]
         self.id = process_data["id"]
@@ -26,9 +26,4 @@ class Process:
     
     def add_process(self):
         pass
-
- 
-
-# class Batch:
     
-#     def __init__(self) -> None:
