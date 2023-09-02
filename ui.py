@@ -10,17 +10,47 @@ COLOR2 = "#040D12"
 COLOR3 = "#5C8374"
 COLOR4 = "#93B1A6"
 
-class SaveDataInterface(tk.Tk):
+class ProcessInteface(tk.Tk):
     
     def __init__(self):
         super().__init__()
         
+        # print(self.main_frame.winfo_class())
         self.style = ttk.Style()
-        self.style.configure('TFrame', background=COLOR1)
+        self.style.configure('TLabel', 
+                             background=COLOR1, 
+                             foreground="white",
+                             font=FONT)
+        self.style.configure("TFrame",
+                             background=COLOR1)
+        
+        
+        
+        self.geometry("640x400")
+        self.main_frame = ttk.Frame(self)
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.lbl_title = ttk.Label(self.main_frame, text="Process")
+        self.lbl_title.grid(row=0, column=0)
+        
+        self.btn_add = ttk.Button(self.main_frame, text="Add", command=self.on_raise_form_button_clicked)
+        self.btn_add.grid(row=0, column=1)
+        
+
+    
+    def on_raise_form_button_clicked(self):
+        raise_form = SaveDataInterface()
+
+class SaveDataInterface(tk.Toplevel):
+    
+    def __init__(self):
+        super().__init__()
+        
+        # self.geometry("600x400")
+        
         self.main_frame = ttk.Frame(self, padding=10, style='TFrame')
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         # self.window.title("Batch Processing")
-        # self.window.geometry("500x500")
         # self.window.config(bg=COLOR1, padx=20, pady=20)
         self.resizable(width=False, height=False)
 
@@ -29,18 +59,18 @@ class SaveDataInterface(tk.Tk):
         self.lbl_title.grid(row=0, column=0, columnspan=3)
         
         # Label name
-        self.name_label = ttk.Label(self.main_frame, text="Name", font=FONT, foreground="white", background=COLOR1)
+        self.name_label = ttk.Label(self.main_frame, text="Name")
         self.name_label.grid(row=1, column=1)
         # Entry name
         self.name_entry = ttk.Entry(self.main_frame, width=35, font=FONT)
         self.name_entry.grid(row=2, column=0, columnspan=3)
         
         # Label Number 1
-        self.lbl_num1 = ttk.Label(self.main_frame, text="\nNumber 1", font=FONT, background=COLOR1, foreground="white")
+        self.lbl_num1 = ttk.Label(self.main_frame, text="\nNumber 1")
         # Label operator 
-        self.lbl_operator = ttk.Label(self.main_frame, text="\nOperator", background=COLOR1, foreground="white", font=FONT)
+        self.lbl_operator = ttk.Label(self.main_frame, text="\nOperator")
         # Label number 2
-        self.lbl_num2 = ttk.Label(self.main_frame, text="\nNumber 2", background=COLOR1, foreground="white", font=FONT)
+        self.lbl_num2 = ttk.Label(self.main_frame, text="\nNumber 2")
         # grid Labels
         self.lbl_num1.grid(row=3, column=0)
         self.lbl_operator.grid(row=3, column=1)
@@ -61,14 +91,14 @@ class SaveDataInterface(tk.Tk):
         self.num2_entry.grid(row=4, column=2)
         
         # Label Max time 
-        self.max_time_label = ttk.Label(self.main_frame, text="\nMax Time\n(secs.)", font=FONT, background=COLOR1, foreground="white")
+        self.max_time_label = ttk.Label(self.main_frame, text="\nMax Time\n(secs.)")
         self.max_time_label.grid(row=5, column=1)
         # entry Max time
         self.max_time_entry = ttk.Entry(self.main_frame, width=35, font=FONT)
         self.max_time_entry.grid(row=6, column=0, columnspan=3)
         
         # Label ID
-        self.id_label = ttk.Label(self.main_frame, text="\nUnique ID", font=FONT, background=COLOR1, foreground="white")
+        self.id_label = ttk.Label(self.main_frame, text="\nUnique ID")
         self.id_label.grid(row=7, column=1)
         # entry ID
         self.id_entry = ttk.Entry(self.main_frame, width=35, font=FONT) 
@@ -78,8 +108,8 @@ class SaveDataInterface(tk.Tk):
         self.save_btn = ttk.Button(self.main_frame, text="Save", command=self.on_save_button_clicked)
         self.save_btn.grid(row=9, column=1, pady=15)
     
-        # self.second_window.withdraw() # ocular ventana 
-        # self.second_window.deiconify() # mostrar ventana
+        # self.withdraw() # ocular ventana 
+        # self.deiconify() # mostrar ventana
         
     
     def hide_main_window(self):
@@ -103,7 +133,7 @@ class SaveDataInterface(tk.Tk):
         result = self.validate_data()
         if result:
             #TODO create Process
-            print("Create Process...")
+            print("<Create Process>")
             self.clear_entries()
 
 
@@ -120,6 +150,7 @@ class SaveDataInterface(tk.Tk):
             
         except ValueError:
             messagebox.showerror(title="Error", message="You must use numbers")
+            return False
         
         else:
             
@@ -155,18 +186,9 @@ class SaveDataInterface(tk.Tk):
         self.id_entry.delete(0, 'end')
                 
 
-class SecondaryWindow(tk.Toplevel):
-    
-    def __init__(self):
-        super().__init__()
-        
-        self.main_frame = ttk.Frame(self)
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        self.entry_title = ttk.Label(self.main_frame, text="Process")
-        self.entry_title.grid(row=0, column=0)
+
         
         
 if __name__ == "__main__":
-    window = SaveDataInterface()
+    window = ProcessInteface()
     window.mainloop()
