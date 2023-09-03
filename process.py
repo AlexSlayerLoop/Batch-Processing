@@ -4,23 +4,15 @@
 class Process:
     
     def __init__(self): 
-        
+        "Constructor creates two empty lists"
         self.processes = []
         self.batch = []
-        
-        # self.programmer_nm = kw["name"]
-        # self.id = kw["id"]
-        # self.operator = kw["operator"]
-        
-        # self.max_time = kw["max_time"] * 1000  # this time will work as ms
-        # self.num1 = kw["num1"]
-        # self.num2 = kw["num2"]
         
         
     def add_process(self, **kw):
     
-        print(kw)
         self.processes.append(kw)
+        print(self.processes)
         
     
     def operation_result(self, operator: str, num1: int, num2: int):

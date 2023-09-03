@@ -1,7 +1,5 @@
-from ui import SaveDataInterface
-
+from process_inteface import ProcessInteface
 
 if __name__ == "__main__":
-    window = SaveDataInterface()
+    window = ProcessInteface()
     window.mainloop()
-
