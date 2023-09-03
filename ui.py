@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from process import Process
 
-TITLE_FONT = ("Verdana", 24)
+TITLE_FONT = ("Verdana", 18)
 FONT = ("Verdana", 12)
 COLOR1 = "#183D3D"
 COLOR2 = "#040D12"
@@ -15,43 +15,53 @@ class ProcessInteface(tk.Tk):
     def __init__(self):
         super().__init__()
         
-        # print(self.main_frame.winfo_class())
-        self.style = ttk.Style()
-        self.style.configure('TLabel', 
-                             background=COLOR1, 
-                             foreground="white",
-                             font=FONT)
-        self.style.configure("TFrame",
-                             background=COLOR1)
-        
-        
+        self.process = Process()
+        print(self.process)
         
         self.geometry("640x400")
-        self.main_frame = ttk.Frame(self)
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
         
-        self.lbl_title = ttk.Label(self.main_frame, text="Process")
-        self.lbl_title.grid(row=0, column=0)
+        self.style = ttk.Style()
+        self.style.configure('TLabel', background=COLOR1, foreground="white", font=FONT)
+        self.style.configure("TFrame", background=COLOR1)
+
         
-        self.btn_add = ttk.Button(self.main_frame, text="Add", command=self.on_raise_form_button_clicked)
-        self.btn_add.grid(row=0, column=1)
+        self.layout_frame = ttk.Frame(self, padding=10)
+        self.layout_frame.pack(fill=tk.BOTH, expand=True)
+        
+        
+        # Left widgets
+        self.lbl_title = ttk.Label(self.layout_frame, text="Batch Processing")
+        self.btn_add_process = ttk.Button(self.layout_frame, 
+                                          text="Add", 
+                                          command=self.on_raise_form_button_clicked)
+        self.treeview_process = ttk.Treeview(self.layout_frame)
         
 
+        
+        
+        self.lbl_title.grid(row=0, column=0)
+        self.btn_add_process.grid(row=1, column=0, pady=20, sticky='we')
+        self.treeview_process.grid(row=2, column=0)
+        
+        
+        # self.withdraw() # ocular ventana 
+        # self.deiconify() # mostrar ventana
+        
     
     def on_raise_form_button_clicked(self):
-        raise_form = SaveDataInterface()
+        raise_form = SaveDataInterface(self.process)
 
 class SaveDataInterface(tk.Toplevel):
     
-    def __init__(self):
+    def __init__(self, object_process):
         super().__init__()
         
-        # self.geometry("600x400")
+        # inherits the Process object
+        self.process: Process = object_process
         
-        self.main_frame = ttk.Frame(self, padding=10, style='TFrame')
+        self.title("Form")
+        self.main_frame = ttk.Frame(self, padding=10)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
-        # self.window.title("Batch Processing")
-        # self.window.config(bg=COLOR1, padx=20, pady=20)
         self.resizable(width=False, height=False)
 
         # Label title
@@ -60,10 +70,11 @@ class SaveDataInterface(tk.Toplevel):
         
         # Label name
         self.name_label = ttk.Label(self.main_frame, text="Name")
-        self.name_label.grid(row=1, column=1)
         # Entry name
         self.name_entry = ttk.Entry(self.main_frame, width=35, font=FONT)
+        # grid name wigets
         self.name_entry.grid(row=2, column=0, columnspan=3)
+        self.name_label.grid(row=1, column=1)
         
         # Label Number 1
         self.lbl_num1 = ttk.Label(self.main_frame, text="\nNumber 1")
@@ -84,7 +95,7 @@ class SaveDataInterface(tk.Toplevel):
         self.combobox = ttk.Combobox(self.main_frame, textvariable=self.combo_var,width=7, font=FONT)
         self.combobox['values'] = ('+', '-', '*', '/', '%')
         self.combobox.insert(0, '+')
-        #self.combobox.bind("<<ComboboxSelected>>") # insert command
+        #self.combobox.bind("<<ComboboxSelected>>" ) # insert command
         self.combobox.grid(row=4, column=1)
         # entry number 2 
         self.num2_entry = ttk.Entry(self.main_frame, width=9, font=FONT)
@@ -107,38 +118,49 @@ class SaveDataInterface(tk.Toplevel):
         # btn Save
         self.save_btn = ttk.Button(self.main_frame, text="Save", command=self.on_save_button_clicked)
         self.save_btn.grid(row=9, column=1, pady=15)
-    
-        # self.withdraw() # ocular ventana 
-        # self.deiconify() # mostrar ventana
         
-    
-    def hide_main_window(self):
-        self.withdraw() # Hide the main window
+        self.transient(self.master) # to inherit parent behavior
+        self.grab_set() # pause paret window while secondary window works
+        self.wait_window(self) 
         
 
     def create_process(self):
-        pass
-        # new_process = Process( name=name,
-                #                        operator=operator,
-                #                        max_time=max_time,
-                #                        num1=num1,
-                #                        num2=num2,
-                #                        id=id
-                #                      )
-                # d = new_process.get_dict()
-                # print(d)
+        """add a new process to the list"""
+        
+        name = self.name_entry.get()
+        operator = self.combo_var.get()
+        id = self.id_entry.get()
+        
+        num1 = int(self.num1_entry.get())
+        num2 = int(self.num2_entry.get())
+        max_time = int(self.max_time_entry.get())
+        
+        result = self.process.operation_result(operator, num1, num2)
+        
+        self.process.add_process(
+                                    id=id,
+                                    name=name, 
+                                    operator=operator, 
+                                    max_time=max_time, 
+                                    num1=num1, 
+                                    num2=num2, 
+                                    result=result
+                                )
+         
                 
     def on_save_button_clicked(self):
+        """Validate information and if is correct calls create_process method"""
         
         result = self.validate_data()
         if result:
-            #TODO create Process
-            print("<Create Process>")
-            self.clear_entries()
+            self.create_process()
+            #TODO show a message window
+            self.destroy()
 
 
     def validate_data(self): 
         """Validate all fields to move forward"""
+        
         name = self.name_entry.get()
         operator = self.combo_var.get()
         id = self.id_entry.get()
@@ -166,29 +188,13 @@ class SaveDataInterface(tk.Toplevel):
             elif operator not in ('+', '-', '*', '/', '%'):
                 messagebox.showerror(title="Error", message="You must use an operator")
                 return False
-            #TODO add validation to verify unique ID
+            elif self.process.is_unique(id):
+                messagebox.showerror(title="Error", message="This id already exists")
             
             else:
                 return True
                 
-    
-    def create_process(self):
-        pass
-    
-    
-    def clear_entries(self):
-        """clear all entries once you save a process"""
-        
-        self.name_entry.delete(0, 'end')
-        self.num1_entry.delete(0, 'end')
-        self.num2_entry.delete(0, 'end')
-        self.max_time_entry.delete(0, 'end')
-        self.id_entry.delete(0, 'end')
-                
 
-
-        
-        
 if __name__ == "__main__":
     window = ProcessInteface()
     window.mainloop()
