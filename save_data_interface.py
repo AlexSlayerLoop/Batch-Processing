@@ -14,8 +14,8 @@ COLOR4 = "#93B1A6"
 
 class SaveDataInterface(tk.Toplevel):
     
-    def __init__(self, object_process):
-        super().__init__()
+    def __init__(self, master, object_process):
+        super().__init__(master)
         
         # inherits the Process object
         self.process: Process = object_process
@@ -115,7 +115,7 @@ class SaveDataInterface(tk.Toplevel):
         result = self.validate_data()
         if result:
             self.create_process()
-            #TODO show a message window
+            messagebox.showinfo(title="Form", message="Process successfully added to the queue")
             self.destroy()
 
 
