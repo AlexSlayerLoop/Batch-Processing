@@ -1,4 +1,4 @@
-from process_inteface import ProcessInterface
+from process_interface import ProcessInterface
 
 if __name__ == "__main__":
     window = ProcessInterface()
