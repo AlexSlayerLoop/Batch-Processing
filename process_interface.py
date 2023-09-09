@@ -15,6 +15,7 @@ class ProcessInterface(tk.Tk):
 
         # window background
         self.config(background=COLOR1)
+        self.resizable(width=False, height=False)
     
         # Styling widgets
         self.style = ttk.Style() 
@@ -32,11 +33,11 @@ class ProcessInterface(tk.Tk):
         self.layout3_frame.grid(row=0, column=2, sticky='n')
         
         # ===============  Frame 1  ==================== #
-        # Label title 
+        # Labels
         self.lbl_title = ttk.Label(self.layout_frame, text="Batch Processing")
-        # Label batch pending
         self.lbl_pending_batches = ttk.Label(self.layout_frame, text="Pending Batches: 0")
-        # Button add
+        
+        # Buttons
         self.btn_add_process = ttk.Button(self.layout_frame, text="Add", command=self.on_raise_form_button_clicked)
 
         # Treeview widget
@@ -94,6 +95,7 @@ class ProcessInterface(tk.Tk):
         self.treeview_2.column("operation", width=80)
         self.treeview_2.column("result", width=80)
         
+        # buttons
         self.btn_play = ttk.Button(self.layout3_frame, text="Play", command=self.on_play_button_clicked)
 
         # grid Frame 3 widgets
@@ -105,6 +107,8 @@ class ProcessInterface(tk.Tk):
         # disable buttons
         self.btn_play.config(state=tk.DISABLED)
         self.btn_add_process.config(state=tk.DISABLED)
+        # update item rows
+        # self.update_treeview_rows()
         
         # if there are still elements in processes, flush them (appends'em into a new batch)
         self.process.flush_processes_list()
@@ -120,20 +124,22 @@ class ProcessInterface(tk.Tk):
     def execute_process(self):
         """Ejecutar un proceso a la vez"""
         # revisa que aun haya procesos
-        if len(self.process.batch) > 0:
+        if len(self.process.processes) > 0:
             # verifica si batch esta no esta vacío
-            if len(self.process.batch[-1]) > 0:
+            if len(self.process.batch[0]) > 0:
                 # actualiza labels
-                process = self.process.get_last_process_added()
+                process = self.process.get_first_process()
                 self.update_process_labels(process=process)
                 # start progressbar
                 self.start_progressbar(process['max_time'])
                 # update treeview rows
                 self.update_treeview_rows()
                 # delete last process
-                self.process.delete_last_process()
+                self.process.delete_first_process()
             else:
-                del self.process.batch[-1]
+                del self.process.batch[0]
+            print("\nbatch list:", self.process.batch)
+            print("process list:", self.process.processes)
             self.execute_process()
 
     def start_progressbar(self, time):
@@ -147,18 +153,18 @@ class ProcessInterface(tk.Tk):
         """insert in treeview_2 and delete from treeview_1"""
         self.insert_on_treeview_2()
         if len(self.treeview_process.get_children()) > 0:
-            selected_item = self.treeview_process.get_children()[-1]
+            selected_item = self.treeview_process.get_children()[0]
             self.treeview_process.delete(selected_item)
-            
-        elif not self.process.is_empty():
-            items = self.process.batch[-1]
-            for item in reversed(items):
+        else:    
+            # if not self.process.is_empty():
+            items = self.process.batch[0]
+            for item in items:
                 self.insert_on_treeview(item)
 
     def insert_on_treeview_2(self):
         """insert a process in treeview_2"""
         # get information from the process to insert into treeview2
-        item_to_insert = self.process.get_last_process_added()
+        item_to_insert = self.process.get_first_process()
         operation = f"{item_to_insert['num1']} {item_to_insert['operator']} " \
                     f"{item_to_insert['num2']}"
                     
@@ -170,6 +176,7 @@ class ProcessInterface(tk.Tk):
                               )
                 
     def update_process_labels(self, process):
+        
         operation = f"{process['num1']} {process['operator']} {process['num2']} = {process['result']}"
         
         self.lbl_name.config(text=f"Name: {process['name']}") 
@@ -193,7 +200,7 @@ class ProcessInterface(tk.Tk):
         raise_form = SaveDataInterface(self, object_process=self.process)
         
         # insert the new brand process in the treeview widget
-        self.insert_on_treeview(self.process.get_last_process_added())
+        self.insert_on_treeview(self.process.processes[-1])
         
         # if batch_size is not specified wil be 5
         self.process.separate_in_batches()
@@ -202,16 +209,20 @@ class ProcessInterface(tk.Tk):
         self.clear_treeview_items()
 
     def insert_on_treeview(self, item):
-        """insert a new row in treeview
-        every time a new process is added"""
-        # item = self.process.get_last_process_added()
+        """insert a new row in treeview every time a new process is added"""
         try:
             p_id = item['id']
             max_time = item['max_time']
-            self.treeview_process.insert(parent="", index=tk.END, text=p_id, values=(max_time, ))
         except TypeError:
             print("processes lists empty")
-
+        else:
+            self.treeview_process.insert(parent="", index=tk.END, text=p_id, values=(max_time, ))
+        finally:
+            if len(self.treeview_process.get_children()) == 0:
+                items = self.process.batch[-1]
+                for item in items:
+                    self.insert_on_treeview(item)
+    
     def clear_treeview_items(self):
         """clear all items from treeview"""
         items_displayed = len(self.treeview_process.get_children())
