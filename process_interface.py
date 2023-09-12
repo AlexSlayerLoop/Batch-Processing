@@ -42,19 +42,19 @@ class ProcessInterface(tk.Tk):
 
         # Treeview widget
         self.column_values = ("max_time", )
-        self.treeview_process = ttk.Treeview(self.layout_frame)
-        self.treeview_process.configure(columns=self.column_values)
+        self.treeview_1 = ttk.Treeview(self.layout_frame)
+        self.treeview_1.configure(columns=self.column_values)
         # add column names 
-        self.treeview_process.heading("#0", text="ID")
-        self.treeview_process.heading("max_time", text="Max Time") 
+        self.treeview_1.heading("#0", text="ID")
+        self.treeview_1.heading("max_time", text="Max Time") 
         # use column method to modify the width
-        self.treeview_process.column("#0", width=80)
-        self.treeview_process.column("max_time", width=80)
+        self.treeview_1.column("#0", width=80)
+        self.treeview_1.column("max_time", width=80)
 
         # grid Frame1 widgets
         self.lbl_title.pack()
         self.btn_add_process.pack(pady=20, fill='x')
-        self.treeview_process.pack()
+        self.treeview_1.pack()
         self.lbl_pending_batches.pack(pady=(15, 0))
 
         # ===============  Frame 2  ==================== #
@@ -103,15 +103,18 @@ class ProcessInterface(tk.Tk):
         self.treeview_2.pack(pady=40)
         self.btn_play.pack()
 
-    def on_play_button_clicked(self):
+    def on_play_button_clicked(self): 
         # disable buttons
         self.btn_play.config(state=tk.DISABLED)
         self.btn_add_process.config(state=tk.DISABLED)
-        # update item rows
-        # self.update_treeview_rows()
         
         # if there are still elements in processes, flush them (appends'em into a new batch)
         self.process.flush_processes_list()
+        
+        # if there's some pre-insserted data, update the treview widget
+        if not self.process.is_empty():
+            for item in self.process.processes:
+                self.insert_on_treeview(item)
         
         # initialize main timer
         thread1 = Thread(target=self.init_main_timer, daemon=True)
@@ -125,11 +128,14 @@ class ProcessInterface(tk.Tk):
         """Ejecutar un proceso a la vez"""
         # revisa que aun haya procesos
         if len(self.process.processes) > 0:
+            # prints for debug purposes
+            print("\nbatch list:", self.process.batch)
+            print("process list:", self.process.processes)
             # verifica si batch esta no esta vacío
             if len(self.process.batch[0]) > 0:
-                # actualiza labels
                 process = self.process.get_first_process()
-                self.update_process_labels(process=process)
+                # actualiza labels
+                self.update_process_labels(process)
                 # start progressbar
                 self.start_progressbar(process['max_time'])
                 # update treeview rows
@@ -138,10 +144,12 @@ class ProcessInterface(tk.Tk):
                 self.process.delete_first_process()
             else:
                 del self.process.batch[0]
-            print("\nbatch list:", self.process.batch)
-            print("process list:", self.process.processes)
             self.execute_process()
-
+        else:
+            self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
+            if len(self.treeview_1.get_children()) > 0:
+                self.clear_treeview_items()
+         
     def start_progressbar(self, time):
         for sec in range(100):
             sleep(time / 100)
@@ -152,14 +160,9 @@ class ProcessInterface(tk.Tk):
     def update_treeview_rows(self):
         """insert in treeview_2 and delete from treeview_1"""
         self.insert_on_treeview_2()
-        if len(self.treeview_process.get_children()) > 0:
-            selected_item = self.treeview_process.get_children()[0]
-            self.treeview_process.delete(selected_item)
-        else:    
-            # if not self.process.is_empty():
-            items = self.process.batch[0]
-            for item in items:
-                self.insert_on_treeview(item)
+        if len(self.treeview_1.get_children()) > 0:
+            selected_item = self.treeview_1.get_children()[0]
+            self.treeview_1.delete(selected_item)
 
     def insert_on_treeview_2(self):
         """insert a process in treeview_2"""
@@ -197,36 +200,23 @@ class ProcessInterface(tk.Tk):
 
     def on_raise_form_button_clicked(self):
         # raise a Form with the fields to create a new process
-        raise_form = SaveDataInterface(self, object_process=self.process)
-        
-        # insert the new brand process in the treeview widget
-        self.insert_on_treeview(self.process.processes[-1])
+        raise_form = SaveDataInterface(self, self.process)
         
         # if batch_size is not specified wil be 5
-        self.process.separate_in_batches()
+        self.process.separate_in_batches(5)
         
-        # clear treeview every time batch increments
-        self.clear_treeview_items()
+        # insert the new brand process in the treeview widget
+        if not self.process.is_empty():
+            self.insert_on_treeview(self.process.processes[-1]) 
 
     def insert_on_treeview(self, item):
         """insert a new row in treeview every time a new process is added"""
-        try:
-            p_id = item['id']
-            max_time = item['max_time']
-        except TypeError:
-            print("processes lists empty")
-        else:
-            self.treeview_process.insert(parent="", index=tk.END, text=p_id, values=(max_time, ))
-        finally:
-            if len(self.treeview_process.get_children()) == 0:
-                items = self.process.batch[-1]
-                for item in items:
-                    self.insert_on_treeview(item)
+        self.treeview_1.insert(parent="", index=tk.END, text=item["id"], values=(item["max_time"], ))
     
+        #update batch Label
+        self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
+            
     def clear_treeview_items(self):
         """clear all items from treeview"""
-        items_displayed = len(self.treeview_process.get_children())
-        if items_displayed == 5:
-            # Delete all items in the treeview
-            self.treeview_process.delete(*self.treeview_process.get_children())
-        self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
+        self.treeview_1.delete(*self.treeview_1.get_children())
+        

@@ -108,11 +108,11 @@ class SaveDataInterface(tk.Toplevel):
             messagebox.showinfo(title="Form", message="Process successfully added to the queue")
             self.destroy()
 
-    def validate_data(self): 
+    def validate_data(self) -> bool: 
         """Validate all fields to move forward"""
         name = self.name_entry.get()
         operator = self.combo_var.get()
-        p_id = self.id_entry.get()
+        new_id = self.id_entry.get()
         
         try:
             num1 = int(self.num1_entry.get())
@@ -128,13 +128,14 @@ class SaveDataInterface(tk.Toplevel):
             elif (operator == '/' or operator == '%') and num2 == 0:
                 messagebox.showerror(title="Error", message="You're trying division by zero")
                 return False
-            elif name == "" or p_id == "":
+            elif name == "" or new_id == "":
                 messagebox.showerror(title="Error", message="Do not leave empty spaces")
                 return False
             elif operator not in ('+', '-', '*', '/', '%'):
                 messagebox.showerror(title="Error", message="You must use an operator")
                 return False
-            elif self.process.is_unique(p_id):
+            elif not self.process.is_unique(new_id):
                 messagebox.showerror(title="Error", message="This id already exists")
+                return False
             else:
                 return True
