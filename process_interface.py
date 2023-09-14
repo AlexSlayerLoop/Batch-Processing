@@ -8,10 +8,8 @@ from tkinter import messagebox
 
 TITLE_FONT = ("Verdana", 18)
 FONT = ("Verdana", 13)
-COLOR1 = "#61677A"
-COLOR2 = "#272829"
-COLOR3 = "#5C8374"
-COLOR4 = "#93B1A6"
+COLOR1 = "#4F709C"
+
 
 class ProcessInterface(tk.Tk):
 
@@ -35,13 +33,18 @@ class ProcessInterface(tk.Tk):
         self.thread1 = Thread(target=self.init_main_timer, daemon=True)
         self.thread2 = Thread(target=self.execute_process, daemon=True)
         
+        # Flags
         self.pause_flag = Event()
         self.pause_flag.set()
+        self.error_flag = Event()
+        self.interruption_flag = Event()
         
         # Event Bindings
-        self.bind("<p>", self.on_pause_released)
-        self.bind("<c>", self.on_continue_released)
-
+        self.bind("<p>", self.on_pause_released)        # Pause
+        self.bind("<c>", self.on_continue_released)     # Continue
+        self.bind("<e>", self.on_error_released)        # Error
+        self.bind("<i>", self.on_interruption_released) # Interrupction
+        
         # Frames
         self.layout_frame = ttk.Frame(self, padding=10)
         self.layout2_frame = ttk.Frame(self,  padding=10)
@@ -133,6 +136,12 @@ class ProcessInterface(tk.Tk):
         
     def on_continue_released(self, event):
         self.pause_flag.set()
+    
+    def on_interruption_released(self, event):
+        self.interruption_flag.set()
+    
+    def on_error_released(self, event):
+        self.error_flag.set()
 
     def on_play_button_clicked(self): 
         # disable buttons
@@ -147,41 +156,79 @@ class ProcessInterface(tk.Tk):
         
     def execute_process(self):
         """Ejecutar un proceso a la vez"""
+        self.interruption_flag.clear()
+        self.error_flag.clear()
         # revisa que aun haya procesos
         if len(self.process.processes) > 0:
             # prints for debug purposes
-            print("\nbatch list:", self.process.batch)
-            print("process list:", self.process.processes)
+            # print("\nbatch list:", self.process.batch)
+            # print("process list:", self.process.processes)
             # verifica si batch esta no esta vacío
             if len(self.process.batch[0]) > 0:
                 process = self.process.get_first_process()
                 # actualiza labels
                 self.update_process_labels(process)
                 # start progressbar
-                self.start_progressbar(process['max_time'])
-                # update treeview rows
-                self.update_treeview_rows()
-                # delete last process
-                self.process.delete_first_process()
+                status = self.start_progressbar(process['max_time'])
+                print(status)
+                if status == 0: # continue work as normal
+                    # update treeview rows
+                    self.update_treeview_rows()
+                    # delete last process
+                    self.process.delete_first_process()
+                    
+                elif status == 1: # Error or interruption flag is raised
+                   self.flag_raised() 
             else:
                 del self.process.batch[0]
             
-            self.execute_process()
+            self.execute_process() # execute the next process
         else:
             self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
             if len(self.treeview_1.get_children()) > 0:
                 self.clear_treeview_items()
+    
+    def flag_raised(self):
+        if self.error_flag.is_set():
+            # code for an Error
+            self.insert_on_treeview_2_with_error() # imprimir con error en treeview_2
+            selected_item = self.treeview_1.get_children()[0] # obtener item de treeview_1
+            self.treeview_1.delete(selected_item) # # borrar item 
+            self.process.delete_first_process()
+            self.error_flag.clear()
         
+        elif self.interruption_flag.is_set():
+            # code for an interruption
+            if len(self.process.batch[0]) > 1: # si el proceso es el ultimo del Lote no lo interrumpe
+                current_process = self.process.batch[0][0] # guarda el proceso en turno
+                self.process.delete_first_process() # elimina el priemer proceso
+                self.process.batch[0].append(current_process) # y lo agraga a la cola del mismo Lote
+                position = len(self.process.batch[0]) # obtenemos el tamaño del Lote actual
+                self.process.processes.insert(position, current_process) # los inserta al final
+                
+                selected_item = self.treeview_1.get_children()[0] # selecciona el primer item de treeview_1
+                self.treeview_1.delete(selected_item) # lo elimina de la vista
+                
+                item = self.process.batch[0][-1]  # obtenemos el item en su nueva posicion y es insertado nuevamente
+                self.treeview_1.insert(parent="", 
+                                    index=len(self.process.batch[0]), 
+                                    text=item["id"], 
+                                    values=(item["max_time"], ))
+            
     def start_progressbar(self, time):
         for sec in range(100):
             if self.pause_flag.is_set(): # bandera de pausa
                 sleep(time / 100)
                 self.progressbar['value'] = sec
                 self.update_idletasks()
+                if self.error_flag.is_set() or self.interruption_flag.is_set():
+                    self.progressbar['value'] = 0
+                    return 1 # Retorna Error o interrupcion 
             else:
-                while not self.pause_flag.is_set(): # mientras no este actibada la bandera pause el programa
+                while not self.pause_flag.is_set(): # mientras no este activada la bandera pause el programa
                     sleep(1)
         self.progressbar['value'] = 0
+        return 0
 
     def update_treeview_rows(self):
         """insert in treeview_2 and delete from treeview_1"""
@@ -202,6 +249,20 @@ class ProcessInterface(tk.Tk):
                                index=tk.END,
                                text=item_to_insert["id"],
                                values=(operation, item_to_insert["result"])
+                              )
+    
+    def insert_on_treeview_2_with_error(self):
+        """insert a process in treeview_2 but with error"""
+        # get information from the process to insert into treeview2
+        item_to_insert = self.process.get_first_process()
+        operation = f"{item_to_insert['num1']} {item_to_insert['operator']} " \
+                    f"{item_to_insert['num2']}"
+                    
+        self.treeview_2.insert(
+                               parent="",
+                               index=tk.END,
+                               text=item_to_insert["id"],
+                               values=(operation, "[Error]")
                               )
                 
     def update_process_labels(self, process):
