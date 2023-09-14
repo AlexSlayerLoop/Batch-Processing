@@ -35,12 +35,12 @@ class ProcessInterface(tk.Tk):
         self.thread1 = Thread(target=self.init_main_timer, daemon=True)
         self.thread2 = Thread(target=self.execute_process, daemon=True)
         
-        # self.pause_flag = Event()
-        # self.pause_flag.set()
+        self.pause_flag = Event()
+        self.pause_flag.set()
         
-        # # Event Bindings
-        # self.bind("<p>", self.on_pause_released)
-        # self.bind("<c>", self.on_continue_released)
+        # Event Bindings
+        self.bind("<p>", self.on_pause_released)
+        self.bind("<c>", self.on_continue_released)
 
         # Frames
         self.layout_frame = ttk.Frame(self, padding=10)
@@ -90,6 +90,7 @@ class ProcessInterface(tk.Tk):
         self.lbl_id = ttk.Label(self.layout2_frame, text=f"ID : ...")
         # progressbar 
         self.progressbar = ttk.Progressbar(self.layout2_frame, mode="determinate", length=180)
+        # general timer
         self.lbl_timer = ttk.Label(self.layout2_frame,
                                    text="00:00:00",
                                    font=("Verdana", 20, "bold"),
@@ -127,11 +128,11 @@ class ProcessInterface(tk.Tk):
         self.treeview_2.pack(pady=40)
         self.btn_play.pack()
     
-    # def on_pause_released(self, event):
-    #     self.pause_flag.clear()
+    def on_pause_released(self, event):
+        self.pause_flag.clear()
         
-    # def on_continue_released(self, event):
-    #     self.pause_flag.set()
+    def on_continue_released(self, event):
+        self.pause_flag.set()
 
     def on_play_button_clicked(self): 
         # disable buttons
@@ -173,14 +174,14 @@ class ProcessInterface(tk.Tk):
         
     def start_progressbar(self, time):
         for sec in range(100):
-                # if self.pause_flag.is_set():
+            if self.pause_flag.is_set(): # bandera de pausa
                 sleep(time / 100)
                 self.progressbar['value'] = sec
                 self.update_idletasks()
-            #     else:
-            #         while not self.pause_flag.is_set():
-            #             sleep(1)
-            # self.progressbar['value'] = 0
+            else:
+                while not self.pause_flag.is_set(): # mientras no este actibada la bandera pause el programa
+                    sleep(1)
+        self.progressbar['value'] = 0
 
     def update_treeview_rows(self):
         """insert in treeview_2 and delete from treeview_1"""
@@ -213,15 +214,22 @@ class ProcessInterface(tk.Tk):
         self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
 
     def init_main_timer(self):
-            if not self.process.is_empty():
-                seconds = self.time_elapsed.get()
-                hours = seconds // 3600
-                minutes = (seconds % 3600) // 60
-                seconds = seconds % 60
-                self.lbl_timer.config(text=f"{hours:02d}:{minutes:02d}:{seconds:02d}")
-                self.after(1000, self.init_main_timer)
-                self.time_elapsed.set(self.time_elapsed.get() + 1)
-    
+        if not self.process.is_empty():
+            
+            seconds = self.time_elapsed.get()
+            hours = seconds // 3600
+            minutes = (seconds % 3600) // 60
+            seconds = seconds % 60
+            self.lbl_timer.config(text=f"{hours:02d}:{minutes:02d}:{seconds:02d}")
+            self.time_elapsed.set(self.time_elapsed.get() + 1)
+            sleep(1)
+            if self.pause_flag.is_set(): # bandera de pausa
+                self.init_main_timer()
+            else:
+                while not self.pause_flag.is_set(): # mientras no este actibada la bandera pause el programa
+                    sleep(1)
+                self.init_main_timer()
+            
     def on_create_processes_button_clicked(self):
         """Create the number of processes given"""
         try:
