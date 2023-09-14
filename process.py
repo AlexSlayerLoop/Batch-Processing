@@ -1,56 +1,40 @@
+import random
+
 class Process:
     
     def __init__(self): 
         """Constructor creates two empty lists"""
-        # self.batch = []
-        # self.processes = []
-        
-        # ========== Init with values ========== # 
-        self.batch = [
-            [
-                {'id': '1', 'name': 'alex', 'operator': '+', 'max_time': 1, 'num1': 1, 'num2': 1, 'result': 2}, 
-                {'id': '2', 'name': 'pepe', 'operator': '+', 'max_time': 1, 'num1': 3, 'num2': 3, 'result': 6}, 
-                {'id': '3', 'name': '123', 'operator': '+', 'max_time': 1, 'num1': 3, 'num2': 112, 'result': 115}, 
-                {'id': '4', 'name': '321', 'operator': '+', 'max_time': 1, 'num1': 1, 'num2': 2, 'result': 3}, 
-                {'id': '5', 'name': '12', 'operator': '+', 'max_time': 1, 'num1': 2, 'num2': 123, 'result': 125}
-            ], 
-            [
-                {'id': '6', 'name': '123as', 'operator': '+', 'max_time': 2, 'num1': 2, 'num2': 32, 'result': 34}, 
-                {'id': '7', 'name': 'asd2', 'operator': '+', 'max_time': 2, 'num1': 2, 'num2': 123, 'result': 125}, 
-                {'id': '8', 'name': 'asda', 'operator': '+', 'max_time': 1, 'num1': 321, 'num2': 543, 'result': 864}, 
-                {'id': '9', 'name': '2123s', 'operator': '+', 'max_time': 1, 'num1': 33, 'num2': 33, 'result': 66}, 
-                {'id': '10', 'name': '123ffd', 'operator': '+', 'max_time': 2, 'num1': 321, 'num2': 222, 'result': 543}
-            ], 
-            [
-                {'id': '11', 'name': '12dd', 'operator': '+', 'max_time': 1, 'num1': 32, 'num2': 213, 'result': 245}, 
-                {'id': '12', 'name': 'akaka', 'operator': '*', 'max_time': 3, 'num1': 1, 'num2': 321, 'result': 321}, 
-                {'id': '13', 'name': 'asdf', 'operator': '+', 'max_time': 2, 'num1': 321, 'num2': 123, 'result': 444}, 
-                {'id': '14', 'name': 'gio', 'operator': '+', 'max_time': 3, 'num1': 21, 'num2': 12, 'result': 33}, 
-                {'id': '15', 'name': 'pio', 'operator': '+', 'max_time': 3, 'num1': 23, 'num2': 2, 'result': 25}
-            ], 
-            [
-                {'id': '16', 'name': 'alejasdmro', 'operator': '+', 'max_time': 3, 'num1': 23, 'num2': 43, 'result': 66}
-            ]
-        ]
-        self.processes =  [
-            {'id': '1', 'name': 'alex', 'operator': '+', 'max_time': 1, 'num1': 1, 'num2': 1, 'result': 2}, 
-            {'id': '2', 'name': 'pepe', 'operator': '+', 'max_time': 1, 'num1': 3, 'num2': 3, 'result': 6}, 
-            {'id': '3', 'name': '123', 'operator': '+', 'max_time': 1, 'num1': 3, 'num2': 112, 'result': 115}, 
-            {'id': '4', 'name': '321', 'operator': '+', 'max_time': 1, 'num1': 1, 'num2': 2, 'result': 3}, 
-            {'id': '5', 'name': '12', 'operator': '+', 'max_time': 1, 'num1': 2, 'num2': 123, 'result': 125}, 
-            {'id': '6', 'name': '123as', 'operator': '+', 'max_time': 2, 'num1': 2, 'num2': 32, 'result': 34}, 
-            {'id': '7', 'name': 'asd2', 'operator': '+', 'max_time': 2, 'num1': 2, 'num2': 123, 'result': 125}, 
-            {'id': '8', 'name': 'asda', 'operator': '+', 'max_time': 1, 'num1': 321, 'num2': 543, 'result': 864}, 
-            {'id': '9', 'name': '2123s', 'operator': '+', 'max_time': 1, 'num1': 33, 'num2': 33, 'result': 66}, 
-            {'id': '10', 'name': '123ffd', 'operator': '+', 'max_time': 2, 'num1': 321, 'num2': 222, 'result': 543}, 
-            {'id': '11', 'name': '12dd', 'operator': '+', 'max_time': 1, 'num1': 32, 'num2': 213, 'result': 245}, 
-            {'id': '12', 'name': 'akaka', 'operator': '*', 'max_time': 3, 'num1': 1, 'num2': 321, 'result': 321}, 
-            {'id': '13', 'name': 'asdf', 'operator': '+', 'max_time': 2, 'num1': 321, 'num2': 123, 'result': 444}, 
-            {'id': '14', 'name': 'gio', 'operator': '+', 'max_time': 3, 'num1': 21, 'num2': 12, 'result': 33}, 
-            {'id': '15', 'name': 'pio', 'operator': '+', 'max_time': 3, 'num1': 23, 'num2': 2, 'result': 25}, 
-            {'id': '16', 'name': 'alejasdmro', 'operator': '+', 'max_time': 3, 'num1': 23, 'num2': 43, 'result': 66}
-        ]
-        
+        self.batch = None
+        self.processes = []
+        self.id = 0
+    
+    def generate_process(self, quantity):
+        """Generate quantity-processes with random"""
+        for _ in range(quantity):
+            self.id += 1
+            operator = ('+', '-', '*', '/', '%')
+            op = random.choice(operator)
+            max_time = random.randint(6, 18)
+            num1 = random.randint(1, 100)
+            num2 = random.randint(1, 100)
+            result = self.operation_result(operator=op, num1=num1, num2=num2)
+            
+            self.add_process ( 
+                id = self.id,
+                operator = op,
+                max_time = max_time,
+                num1 = num1,
+                num2 = num2,
+                result = result
+            )              
+    
+    def split_in_batches(self, batch_size: int = 5):
+        split_lists = []
+        for i in range(0, len(self.processes), batch_size):
+            chunk = self.processes[i:i + batch_size]
+            split_lists.append(chunk)
+
+        self.batch = split_lists
     
     def add_process(self, **kw):
         """add a new process to the list"""
