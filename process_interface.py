@@ -1,10 +1,17 @@
 import tkinter as tk
 from tkinter import ttk
 from process import Process
-from save_data_interface import SaveDataInterface, FONT, COLOR1
 from threading import Thread
+from threading import Event
 from time import sleep
+from tkinter import messagebox
 
+TITLE_FONT = ("Verdana", 18)
+FONT = ("Verdana", 13)
+COLOR1 = "#61677A"
+COLOR2 = "#272829"
+COLOR3 = "#5C8374"
+COLOR4 = "#93B1A6"
 
 class ProcessInterface(tk.Tk):
 
@@ -20,7 +27,20 @@ class ProcessInterface(tk.Tk):
         # Styling widgets
         self.style = ttk.Style() 
         self.style.configure('TLabel', background=COLOR1, foreground="white", font=FONT)
+        self.style.configure('Title.TLabel', background=COLOR1, foreground="white", font=TITLE_FONT)
         self.style.configure("TFrame", background=COLOR1)
+        self.style.configure("TButton", font=FONT)
+        
+        # Threads
+        self.thread1 = Thread(target=self.init_main_timer, daemon=True)
+        self.thread2 = Thread(target=self.execute_process, daemon=True)
+        
+        # self.pause_flag = Event()
+        # self.pause_flag.set()
+        
+        # # Event Bindings
+        # self.bind("<p>", self.on_pause_released)
+        # self.bind("<c>", self.on_continue_released)
 
         # Frames
         self.layout_frame = ttk.Frame(self, padding=10)
@@ -34,11 +54,15 @@ class ProcessInterface(tk.Tk):
         
         # ===============  Frame 1  ==================== #
         # Labels
-        self.lbl_title = ttk.Label(self.layout_frame, text="Batch Processing")
+        self.lbl_title = ttk.Label(self.layout_frame, text="Batch Processing", style='Title.TLabel')
+        self.lbl_num_processes = ttk.Label(self.layout_frame, text="Number of Processes")
         self.lbl_pending_batches = ttk.Label(self.layout_frame, text="Pending Batches: 0")
         
         # Buttons
-        self.btn_add_process = ttk.Button(self.layout_frame, text="Add", command=self.on_raise_form_button_clicked)
+        self.btn_add_process = ttk.Button(self.layout_frame, text="Add", command=self.on_create_processes_button_clicked)
+        
+        # Entries
+        self.quantity_entry = tk.Entry(self.layout_frame, width=30)
 
         # Treeview widget
         self.column_values = ("max_time", )
@@ -53,13 +77,14 @@ class ProcessInterface(tk.Tk):
 
         # grid Frame1 widgets
         self.lbl_title.pack()
-        self.btn_add_process.pack(pady=20, fill='x')
+        self.lbl_num_processes.pack(pady=(20, 0))
+        self.quantity_entry.pack()
+        self.btn_add_process.pack(pady=10)
         self.treeview_1.pack()
         self.lbl_pending_batches.pack(pady=(15, 0))
 
         # ===============  Frame 2  ==================== #
-        self.lbl_current_process = ttk.Label(self.layout2_frame, text="Current Process") 
-        self.lbl_name = ttk.Label(self.layout2_frame, text=f"Name : ...")
+        self.lbl_current_process = ttk.Label(self.layout2_frame, text="Current Process", style='Title.TLabel') 
         self.lbl_operation = ttk.Label(self.layout2_frame, text=f"Operation : ...")
         self.lbl_max_time = ttk.Label(self.layout2_frame, text=f"Max Time : ")
         self.lbl_id = ttk.Label(self.layout2_frame, text=f"ID : ...")
@@ -67,14 +92,13 @@ class ProcessInterface(tk.Tk):
         self.progressbar = ttk.Progressbar(self.layout2_frame, mode="determinate", length=180)
         self.lbl_timer = ttk.Label(self.layout2_frame,
                                    text="00:00:00",
-                                   font=("Verdana", 20),
+                                   font=("Verdana", 20, "bold"),
                                    background="white",
                                    foreground="black")
         self.time_elapsed = tk.IntVar()
 
         # grid Frame 2 widgets
-        self.lbl_current_process.pack()
-        self.lbl_name.pack(anchor="w", pady=(40, 20))
+        self.lbl_current_process.pack(pady=(0, 50))
         self.lbl_operation.pack(anchor="w", pady=20)
         self.lbl_max_time.pack(anchor="w", pady=20)
         self.lbl_id.pack(anchor="w", pady=20)
@@ -82,7 +106,7 @@ class ProcessInterface(tk.Tk):
         self.lbl_timer.pack()
         
         # ===============  Frame 3  ==================== #
-        self.lbl_completed_processes = ttk.Label(self.layout3_frame, text="Completed Processes")
+        self.lbl_completed_processes = ttk.Label(self.layout3_frame, text="Completed Processes", style='Title.TLabel')
         # create a treeview widget
         self.column_values_2 = ("operation", "result")
         self.treeview_2 = ttk.Treeview(self.layout3_frame, columns=self.column_values_2)
@@ -102,27 +126,23 @@ class ProcessInterface(tk.Tk):
         self.lbl_completed_processes.pack()
         self.treeview_2.pack(pady=40)
         self.btn_play.pack()
+    
+    # def on_pause_released(self, event):
+    #     self.pause_flag.clear()
+        
+    # def on_continue_released(self, event):
+    #     self.pause_flag.set()
 
     def on_play_button_clicked(self): 
         # disable buttons
         self.btn_play.config(state=tk.DISABLED)
         self.btn_add_process.config(state=tk.DISABLED)
         
-        # if there are still elements in processes, flush them (appends'em into a new batch)
-        self.process.flush_processes_list()
-        
-        # if there's some pre-insserted data, update the treview widget
-        if not self.process.is_empty():
-            for item in self.process.processes:
-                self.insert_on_treeview(item)
-        
         # initialize main timer
-        thread1 = Thread(target=self.init_main_timer, daemon=True)
-        thread1.start()
+        self.thread1.start()
         
         # while not self.process.is_empty():
-        thread2 = Thread(target=self.execute_process, daemon=True)
-        thread2.start()
+        self.thread2.start()
         
     def execute_process(self):
         """Ejecutar un proceso a la vez"""
@@ -144,18 +164,23 @@ class ProcessInterface(tk.Tk):
                 self.process.delete_first_process()
             else:
                 del self.process.batch[0]
+            
             self.execute_process()
         else:
             self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
             if len(self.treeview_1.get_children()) > 0:
                 self.clear_treeview_items()
-         
+        
     def start_progressbar(self, time):
         for sec in range(100):
-            sleep(time / 100)
-            self.progressbar['value'] = sec
-            self.update_idletasks()
-        self.progressbar['value'] = 0
+                # if self.pause_flag.is_set():
+                sleep(time / 100)
+                self.progressbar['value'] = sec
+                self.update_idletasks()
+            #     else:
+            #         while not self.pause_flag.is_set():
+            #             sleep(1)
+            # self.progressbar['value'] = 0
 
     def update_treeview_rows(self):
         """insert in treeview_2 and delete from treeview_1"""
@@ -180,39 +205,41 @@ class ProcessInterface(tk.Tk):
                 
     def update_process_labels(self, process):
         
-        operation = f"{process['num1']} {process['operator']} {process['num2']} = {process['result']}"
+        operation = f"{process['num1']} {process['operator']} {process['num2']} = {process['result']:.2f}"
         
-        self.lbl_name.config(text=f"Name: {process['name']}") 
         self.lbl_operation.config(text=f"Operation: {operation}")
         self.lbl_max_time.config(text=f"Max Time: {process['max_time']}") 
         self.lbl_id.config(text=f"ID: {process['id']}")
         self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
 
     def init_main_timer(self):
-        if not self.process.is_empty():
-            seconds = self.time_elapsed.get()
-            hours = seconds // 3600
-            minutes = (seconds % 3600) // 60
-            seconds = seconds % 60
-            self.lbl_timer.config(text=f"{hours:02d}:{minutes:02d}:{seconds:02d}")
-            self.after(1000, self.init_main_timer)
-            self.time_elapsed.set(self.time_elapsed.get() + 1)
-
-    def on_raise_form_button_clicked(self):
-        # raise a Form with the fields to create a new process
-        raise_form = SaveDataInterface(self, self.process)
-        
-        # if batch_size is not specified wil be 5
-        self.process.separate_in_batches(5)
-        
-        # insert the new brand process in the treeview widget
-        if not self.process.is_empty():
-            self.insert_on_treeview(self.process.processes[-1]) 
-
+            if not self.process.is_empty():
+                seconds = self.time_elapsed.get()
+                hours = seconds // 3600
+                minutes = (seconds % 3600) // 60
+                seconds = seconds % 60
+                self.lbl_timer.config(text=f"{hours:02d}:{minutes:02d}:{seconds:02d}")
+                self.after(1000, self.init_main_timer)
+                self.time_elapsed.set(self.time_elapsed.get() + 1)
+    
+    def on_create_processes_button_clicked(self):
+        """Create the number of processes given"""
+        try:
+            num_of_processes = int(self.quantity_entry.get())
+        except ValueError:
+            messagebox.showerror(title="Error", message="You must use integers numbers")
+        else:
+            if num_of_processes > 0:
+                self.process.generate_process(num_of_processes)
+                self.process.split_in_batches()
+                
+                for item in self.process.processes:
+                    self.insert_on_treeview(item)
+                
+            
     def insert_on_treeview(self, item):
         """insert a new row in treeview every time a new process is added"""
         self.treeview_1.insert(parent="", index=tk.END, text=item["id"], values=(item["max_time"], ))
-    
         #update batch Label
         self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
             
@@ -220,3 +247,9 @@ class ProcessInterface(tk.Tk):
         """clear all items from treeview"""
         self.treeview_1.delete(*self.treeview_1.get_children())
         
+
+
+
+if __name__ == "__main__":
+    window = ProcessInterface()
+    window.mainloop()
