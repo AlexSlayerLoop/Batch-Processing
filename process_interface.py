@@ -158,6 +158,7 @@ class ProcessInterface(tk.Tk):
         """Ejecutar un proceso a la vez"""
         self.interruption_flag.clear()
         self.error_flag.clear()
+        print(self.process.batch)
         # revisa que aun haya procesos
         if len(self.process.processes) > 0:
             # prints for debug purposes
@@ -170,7 +171,7 @@ class ProcessInterface(tk.Tk):
                 self.update_process_labels(process)
                 # start progressbar
                 status = self.start_progressbar(process['max_time'])
-                print(status)
+
                 if status == 0: # continue work as normal
                     # update treeview rows
                     self.update_treeview_rows()
@@ -178,11 +179,16 @@ class ProcessInterface(tk.Tk):
                     self.process.delete_first_process()
                     
                 elif status == 1: # Error or interruption flag is raised
-                   self.flag_raised() 
+                   self.flag_raised()  
+                   
             else:
                 del self.process.batch[0]
-            
+                
+                for item in self.process.batch[0]:
+                    self.insert_on_treeview(item)
+                
             self.execute_process() # execute the next process
+        
         else:
             self.lbl_pending_batches.config(text=f"Pending Batches: {self.process.get_batch_len()}")
             if len(self.treeview_1.get_children()) > 0:
@@ -195,15 +201,14 @@ class ProcessInterface(tk.Tk):
             selected_item = self.treeview_1.get_children()[0] # obtener item de treeview_1
             self.treeview_1.delete(selected_item) # # borrar item 
             self.process.delete_first_process()
-            self.error_flag.clear()
         
         elif self.interruption_flag.is_set():
             # code for an interruption
             if len(self.process.batch[0]) > 1: # si el proceso es el ultimo del Lote no lo interrumpe
                 current_process = self.process.batch[0][0] # guarda el proceso en turno
-                self.process.delete_first_process() # elimina el priemer proceso
+                self.process.delete_first_process() # elimina el primer proceso
                 self.process.batch[0].append(current_process) # y lo agraga a la cola del mismo Lote
-                position = len(self.process.batch[0]) # obtenemos el tamaño del Lote actual
+                position = len(self.process.batch[0]) - 1 # obtenemos el tamaño del Lote actual
                 self.process.processes.insert(position, current_process) # los inserta al final
                 
                 selected_item = self.treeview_1.get_children()[0] # selecciona el primer item de treeview_1
@@ -211,9 +216,10 @@ class ProcessInterface(tk.Tk):
                 
                 item = self.process.batch[0][-1]  # obtenemos el item en su nueva posicion y es insertado nuevamente
                 self.treeview_1.insert(parent="", 
-                                    index=len(self.process.batch[0]), 
+                                    index=len(self.process.batch[0]) -1, 
                                     text=item["id"], 
                                     values=(item["max_time"], ))
+        
             
     def start_progressbar(self, time):
         for sec in range(100):
@@ -302,10 +308,9 @@ class ProcessInterface(tk.Tk):
                 self.process.generate_process(num_of_processes)
                 self.process.split_in_batches()
                 
-                for item in self.process.processes:
+                for item in self.process.batch[0]:
                     self.insert_on_treeview(item)
                 
-            
     def insert_on_treeview(self, item):
         """insert a new row in treeview every time a new process is added"""
         self.treeview_1.insert(parent="", index=tk.END, text=item["id"], values=(item["max_time"], ))

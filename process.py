@@ -89,5 +89,3 @@ class Process:
         del self.batch[0][0]
         del self.processes[0]
         
-        if len(self.batch[0]) == 0:
-            del self.batch[0] 
